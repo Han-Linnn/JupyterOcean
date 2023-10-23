@@ -5,6 +5,7 @@ The JupyterOcean Library currently comprises of a Jupyter Lab extension for usin
 ## 🏗 Setup
 
 To start using the extension, simply run these commands in your terminal::
+( Note: if the `jupyter labextension` failed with the extension not found error, try to reload the IDE and run again. )
 
 ```
 git clone https://github.com/Han-Linnn/JupyterOcean.git

@@ -1,0 +1,166 @@
+{
+  "name": "jupyterOcean",
+  "version": "1.0.0",
+  "description": "Control JupyterLab from Python notebooks",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension",
+    "widgets"
+  ],
+  "files": [
+    "lib/**/*.js",
+    "dist/*.js",
+    "style/*.css",
+    "style/*.js",
+    "schema/**/*.json"
+  ],
+  "homepage": "https://github.com/Han-Linnn/JupyterOcean",
+  "bugs": {
+    "url": "https://github.com/Han-Linnn/JupyterOcean/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Han Lin",
+    "email": "linchan971007@gmail.com"
+  },
+  "main": "lib/index.js",
+  "browser": {
+    "stream": "stream-browserify",
+    "http": "stream-http",
+    "https": "https-browserify",
+    "web3": false
+  },
+  "style": "style/widget.css",
+  "styleModule": "style/style.js",
+  "types": "./lib/index.d.ts",
+  "sideEffects": [
+    "style/*.css",
+    "style/style.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Han-Linnn/JupyterOcean"
+  },
+  "scripts": {
+    "build": "jlpm run build:lib && jlpm run build:labextension:dev",
+    "build:prod": "jlpm run build:lib && jlpm run build:labextension",
+    "build:lib": "tsc",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "clean": "rimraf lib tsconfig.tsbuildinfo jupyterOcean/labextension",
+    "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
+    "clean:labextension": "rimraf jupyterOcean/labextension",
+    "eslint": "eslint . --ext .ts,.tsx --fix",
+    "eslint:check": "eslint . --ext .ts,.tsx",
+    "lint": "jlpm && jlpm run prettier && jlpm run eslint",
+    "lint:check": "jlpm run prettier:check && jlpm run eslint:check",
+    "prepack": "npm run build",
+    "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\" \"!dist/**\" \"!docs/**\"",
+    "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\" \"!dist/**\" \"!docs/**\"",
+    "watch": "npm-run-all -p watch:*",
+    "watch:lib": "tsc -w"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}": [
+      "prettier --write",
+      "git add"
+    ],
+    "**/*{.py}": [
+      "black",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "@jupyter-widgets/base": "^1 || ^2 || ^3 || ^4",
+    "@jupyter-widgets/controls": "^3.0.0",
+    "@jupyterlab/application": "^3.2.3",
+    "@jupyterlab/apputils": "^3.2.3",
+    "@jupyterlab/launcher": "^3.1.0",
+    "@jupyterlab/observables": "^4.2.3",
+    "@jupyterlab/outputarea": "^3.1.0",
+    "@jupyterlab/rendermime": "^3.2.8",
+    "@lumino/algorithm": "^1.9.1",
+    "@lumino/commands": "^1.12.0",
+    "@lumino/disposable": "^1.10.1",
+    "@lumino/messaging": "^1.10.1",
+    "@lumino/widgets": "^1.19.0",
+    "@oceanprotocol/lib": "^1.1.6",
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "crypto-js": "^4.1.1",
+    "ethers": "^5.5.3",
+    "https-browserify": "^1.0.0",
+    "jupyter": "^0.0.0",
+    "lab": "^18.0.2",
+    "lit-js-sdk": "^1.1.121",
+    "node-polyfill-webpack-plugin": "^2.0.0",
+    "python": "^0.0.4",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "style-loader": "^3.3.1",
+    "web3": "^1.7.4",
+    "webpack": "^5.73.0"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^3.2.3",
+    "@types/expect.js": "^0.3.29",
+    "@types/node": "^10.11.6",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "css-loader": "^6.8.1",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-jsdoc": "^22.1.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.18.3",
+    "expect.js": "^0.3.1",
+    "fs-extra": "^7.0.0",
+    "husky": "^3.1.0",
+    "lint-staged": "^9.4.3",
+    "mkdirp": "^0.5.1",
+    "npm-run-all": "^4.1.3",
+    "prettier": "^2.0.2",
+    "typescript": "~4.4.4"
+  },
+  "jupyterlab": {
+    "extension": "lib/plugin",
+    "discovery": {
+      "server": {
+        "base": {
+          "name": "jupyterlab-iframe"
+        },
+        "managers": [
+          "pip"
+        ]
+      }
+    },
+    "outputDir": "jupyterOcean/labextension/",
+    "webpackConfig": "webpack.config.js",
+    "sharedPackages": {
+      "@jupyter-widgets/base": {
+        "bundled": false,
+        "singleton": true
+      }
+    },
+    "schemaDir": "schema",
+    "_build": {
+      "load": "static/remoteEntry.a6469d377a00145a510d.js",
+      "extension": "./extension",
+      "style": "./style"
+    }
+  },
+  "jupyter-releaser": {
+    "hooks": {
+      "before-build-npm": [
+        "python -m pip install jupyterlab~=3.0",
+        "jlpm"
+      ]
+    }
+  }
+}

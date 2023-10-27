@@ -65,9 +65,9 @@ class IPFSComponent extends (react__WEBPACK_IMPORTED_MODULE_1___default().Compon
         };
         xhr.open("POST", "https://ipfs.infura.io:5001/api/v0/add", true);
         // xhr.setRequestHeader("Authorization", `Bearer ${this.state.api}`);
-        // API = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
-        // API_secret = "8456ae0837c28f65138b4dcd5415c193"
-        xhr.setRequestHeader("Authorization", "Basic " + btoa(`${this.state.api}` + ":" + `${this.state.api_secret}`));
+        const API = "2VYq3ClvhVYDIMihM2w1xIbYWgT";
+        const API_secret = "8456ae0837c28f65138b4dcd5415c193";
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(`${API}` + ":" + `${API_secret}`));
         xhr.onload = () => {
             if (xhr.status === 200) {
                 alert("File uploaded successfully");
@@ -85,16 +85,7 @@ class IPFSComponent extends (react__WEBPACK_IMPORTED_MODULE_1___default().Compon
     }
     render() {
         return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement((react__WEBPACK_IMPORTED_MODULE_1___default().Fragment), null,
-            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("form", { onSubmit: this.handleSubmit },
-                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", null,
-                    "API Key:",
-                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { type: "text", value: this.state.api, onChange: this.handleChange1 })),
-                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("br", null),
-                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", null,
-                    "API Secret Key:",
-                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { type: "text", value: this.state.api_secret, onChange: this.handleChange2 })),
-                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("br", null),
-                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", { type: "submit", value: "Submit" }, "Save Key")),
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("form", { onSubmit: this.handleSubmit }),
             react__WEBPACK_IMPORTED_MODULE_1___default().createElement("br", null),
             react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", null,
                 "Choose File to Upload:",
@@ -236,7 +227,6 @@ function activate(app, palette, rendermime, translator, registry, launcher, labS
         execute: (args) => {
             // signer account (My metamask wallet address)
             getAccount();
-            alert("Wallet connected!");
         },
     });
     // Add a command (send ocean from my Metamask wallet to the ramdom created wallet)
@@ -331,6 +321,7 @@ async function getAccount() {
     console.log("Account:", await signer.getAddress());
     await signer.getAddress();
     // accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    alert("Wallet connected!");
 }
 // function uploadFile() {
 //   let file = '123'
@@ -1348,8 +1339,8 @@ __webpack_require__.r(__webpack_exports__);
 
 async function sendOcean(to_address) {
     console.log("Sending OCEAN initiated");
-    const send_token_amount = prompt("Enter OCEAN amount. This is the amount you expect to pay for the dataset.", "15");
-    const send_eth_amount = prompt("Enter ETH amount. This is the amount you expect to pay in GAS fees from the test wallet. Do not put too much if you are using mainnet!", "0.2");
+    const send_token_amount = prompt("Enter OCEAN amount. This is the amount you expect to pay for the asset.", "15");
+    const send_eth_amount = prompt("Enter MATIC amount. This is the amount you expect to pay for GAS fees from the virtual wallet. Do not put too much if you are using mainnet!", "0.2");
     // 旧的contract address已经没了（因为这是对应rinkby的合同地址），所以改成Membai的contract address
     // const oceanAddress = "0x8967BCF84170c91B0d24D4302C2376283b0B3a07";
     const oceanAddress = "0xd8992Ed72C445c35Cb4A2be468568Ed1079357c8";
@@ -1427,4 +1418,4 @@ module.exports = JSON.parse('{"name":"jupyterOcean","version":"1.0.0","descripti
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_plugin_js-lib_widgets_frontend_js.829cf71f32fe9c853a66.js.map
+//# sourceMappingURL=lib_plugin_js-lib_widgets_frontend_js.19a85f9eb0b9defe9483.js.map

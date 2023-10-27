@@ -37,12 +37,14 @@ import pickle
 # os.environ['REMOTE_TEST_PRIVATE_KEY2'] = REMOTE_TEST_PRIVATE_KEY2
 # print('Ocean config called !!')
 # os.environ['MUMBAI_RPC_URL'] = 'https://rpc-mumbai.maticvigil.com'
+print('Initializing Ocean Config ...')
 os.environ['MUMBAI_RPC_URL'] = 'https://polygon-mumbai.infura.io/v3/' # infura RPC node service provider
 # os.environ['WEB3_INFURA_PROJECT_ID'] = '8a76d4cbba2d461697887f12d66e9ddf' # acount 1
 os.environ['WEB3_INFURA_PROJECT_ID'] = '7dd18e7dba264b1294e4c0c0206893f1' # account 2 (with Metamask account -- hanlin)
 config = get_config_dict("mumbai")
 ocean = Ocean(config)
 OCEAN = ocean.OCEAN_token
+print('Ocean Initialization done.')
 # veOCEAN = ocean.veOCEAN
 # network_url = "https://polygon-mumbai.infura.io/v3/8a76d4cbba2d461697887f12d66e9ddf"
 
@@ -99,20 +101,20 @@ class OceanMarket():
         # self.my_wallet = Account.from_key(private_key='4495afd304f0e4e9a9e0b4a18525a979fa79e2176c518bddcc0ee187adea50bc')
         # print(self.private_key)
         print(f"Vitual Wallet Address = '{self.wallet.address}'")
-        print(f"My Wallet Address = '{self.my_wallet.address}'")
+        # print(f"My Wallet Address = '{self.my_wallet.address}'")
         # print(f"Wallet OCEAN = {pretty_ether_and_wei(OCEAN.balanceOf('0xFEeA4195D66A95d44A857216e6fa51F9BE01d657'))}")
         # print(f"Wallet ETH = {pretty_ether_and_wei(ocean.web3.eth.get_balance('0xFEeA4195D66A95d44A857216e6fa51F9BE01d657'))}")
         # Contract合同的oceanAddress设置错了才发不出OCEAN，设置成membai链的ocean contract address 解决。
         # assert OCEAN.balanceOf(self.wallet.address) > 0, "Alice needs OCEAN"
-        print(f"My Wallet OCEAN = {OCEAN.balanceOf(self.my_wallet)}")  # 我Metamask钱包里里要有OCEAN才能传给那个随机生成的钱包
-        print(f"My Wallet ETH = {ocean.wallet_balance(self.my_wallet)}")
+        # print(f"My Wallet OCEAN = {OCEAN.balanceOf(self.my_wallet)}")  # 我Metamask钱包里里要有OCEAN才能传给那个随机生成的钱包
+        # print(f"My Wallet ETH = {ocean.wallet_balance(self.my_wallet)}")
 
         print(f"Vitual Wallet OCEAN = {OCEAN.balanceOf(self.wallet)}") 
         print(f"Vitual Wallet ETH = {ocean.wallet_balance(self.wallet)}")
 
 
-    def serach_asset(self, text=None, tag=None):
-        if text is None:
+    def search_asset(self, asset_name=None, asset_tag=None):
+        if asset_name is None:
             print("Please input the asset name to search!")
             return
 
@@ -120,7 +122,7 @@ class OceanMarket():
             {
                 "query": {
                     "query_string": {
-                        "query": f"*{text}*",
+                        "query": f"*{asset_name}*",
                         "default_operator": "AND",
                         "fields": ["metadata.name"],
                     }
@@ -129,10 +131,10 @@ class OceanMarket():
         )
 
         # Filter just by the `tags` key
-        if tag is not None:
+        if asset_tag is not None:
             ddos = list(
                 filter(
-                    lambda a: tag in a.metadata["tags"],
+                    lambda a: asset_tag in a.metadata["tags"],
                     list(filter(lambda a: "tags" in a.metadata.keys(), ddos)),
                 )
             )
@@ -192,7 +194,7 @@ class OceanMarket():
             {
                 "query": {
                     "query_string": {
-                        "query": f"{self.my_wallet.address}",
+                        "query": f"{self.wallet.address}",
                         "default_operator": "AND",
                         "fields": ["nft.owner"],
                     }
@@ -248,13 +250,177 @@ class OceanMarket():
             print(" ")
 
 
-    # def check_dt_wallet(self, did):
-    #     assert self.wallet is not None, "Ramdom wallet error, initialize app again"
-    #     assert self.my_wallet is not None, "Metamask wallet error, please connect Metamask first."
-    #     print("Checking the target asset's datatoken...")
-    #     asset = ocean.assets.resolve(did)
-    #     data_token = ocean.get_datatoken(asset.datatokens[0]["address"])
-    #     print(f"I have {data_token.balanceOf(self.my_wallet.address), data_token.symbol()}.")
+    ### publish dataset asset
+    def dt_publish(self, DT_name=None, cid=None, algo_did=None):
+
+        # # IPFS upload flow
+        # projectId = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
+        # projectSecret = "8456ae0837c28f65138b4dcd5415c193"
+        # endpoint = "https://ipfs.infura.io:5001"
+        # # IPFS_URI = "https://ipfs.io/ipfs/"
+
+        # files = {
+        #     'file': open('./ipfs_files/brain_and_gpr/' + DT_name, 'rb')
+        # }
+
+        # # DT_url = 'https://raw.githubusercontent.com/trentmc/branin/main/branin.arff'
+        # # DT_name = 'brain.arff'
+
+        # ## ADD FILE TO IPFS AND SAVE THE HASH ###
+        # response1 = requests.post(endpoint + '/api/v0/add', files=files, auth=(projectId, projectSecret))
+        # print(response1)
+        # # print(response1.text)
+        # cid = response1.text.split(",")[1].split(":")[1].replace('"','')
+        # print(f"cid ==> {cid}")
+
+        assert self.wallet is not None, "Virtual wallet error, initialize app again"
+
+        DT_url = f"https://han-lin.infura-ipfs.io/ipfs/{cid}"
+        if not DT_name:
+            now = datetime.now()
+            formatted_datetime = now.strftime('%Y-%m-%d-%H:%M')
+            DT_name = f"Data-{formatted_datetime}"
+
+        exchange_args = ExchangeArguments(
+            rate=to_wei(1), # you can customize this with any price
+            base_token_addr=ocean.OCEAN_address, # you can customize this with any ERC20 token
+            dt_decimals=18
+        )
+
+        print("Publishing data asset on Ocean Market ...")
+        print("=========================================")
+        (DT_data_nft, DT_datatoken, DT_ddo) = ocean.assets.create_url_asset(
+            DT_name, 
+            DT_url, 
+            {"from": self.wallet},
+            with_compute=True,
+            wait_for_aqua=True, 
+            pricing_schema_args=exchange_args
+        )
+        print(f"DT_data_nft address = '{DT_data_nft.address}'")
+        print(f"DT_datatoken address = '{DT_datatoken.address}'")
+        if DT_ddo is not None:
+            print(" ")
+            print("========================================================")
+            print("Publish finished! Here is the decentralized identifier(DID):")
+            print(DT_ddo.did)
+            print("========================================================")
+            if algo_did is not None:
+                print(" ")
+                print("Adding trusted algorithm for dataset...")
+                DT_ddo = self.add_trusted_algo(DT_ddo.did, algo_did)
+                print("Algorithm is linked to the dataset! You can start C2D.")
+                # return DT_ddo.did
+        else:
+            print("===============================================")
+            print("Publish finished! But DDO is not generated yet.")
+
+
+    ### publish algorithm asset
+    def algo_publish(self, ALGO_name=None, cid=None):
+        
+        # docker_image = "hln940/ocean_dockers"
+        # docker_tag = "latest"
+        # docker_checksum = "sha256:037047cda07d1abc2a24c3d3033283cb1983f38fb8379d19445b8b17162b6a96"
+
+        # ## IPFS upload flow
+        # if file is not None and file:
+        #     projectId = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
+        #     projectSecret = "8456ae0837c28f65138b4dcd5415c193"
+        #     endpoint = "https://ipfs.infura.io:5001"
+        #     files = {
+        #         'file': open('./ipfs_files/brain_and_gpr/' + file, 'rb')
+        #     }
+
+        #     ### ADD FILE TO IPFS AND SAVE THE HASH ###
+        #     print("=====================================")
+        #     print("Uploading algorithm asset on IPFS ...")
+        #     print("=====================================")
+        #     response1 = requests.post(endpoint + '/api/v0/add', files=files, auth=(projectId, projectSecret))
+        #     print(response1)
+        #     # print(response1.text)
+        #     cid = response1.text.split(",")[1].split(":")[1].replace('"','')
+        #     print(f"cid ==> {cid}")
+        #     ALGO_url = f"ipfs.io/ipfs/{cid}"
+
+        # ALGO_url = "https://raw.githubusercontent.com/oceanprotocol/c2d-examples/main/branin_and_gpr/gpr.py"
+        assert self.wallet is not None, "Virtual wallet error, initialize app again"
+
+        ALGO_url = f"https://han-lin.infura-ipfs.io/ipfs/{cid}"
+        if ALGO_name is not None and ALGO_name:
+            now = datetime.now()
+            formatted_datetime = now.strftime('%Y-%m-%d-%H:%M')
+            ALGO_name = f"Algo-{formatted_datetime}"
+
+        exchange_args = ExchangeArguments(
+            rate=to_wei(1), # you can customize this with any price
+            base_token_addr=ocean.OCEAN_address, # you can customize this with any ERC20 token
+            dt_decimals=18
+        )
+
+        print("Publishing algorithm asset on Ocean Market ...")
+        print("==============================================")
+        ## Default publish setting
+        (ALGO_data_nft, ALGO_datatoken, ALGO_ddo) = ocean.assets.create_algo_asset(
+            ALGO_name, 
+            ALGO_url, 
+            {"from": self.wallet},
+            # docker_image,
+            # docker_tag,
+            # docker_checksum,
+            with_compute=True,
+            wait_for_aqua=True,
+            pricing_schema_args=exchange_args
+        )
+        print(f"ALGO_data_nft address = '{ALGO_data_nft.address}'")
+        print(f"ALGO_datatoken address = '{ALGO_datatoken.address}'")
+
+        if ALGO_ddo is not None:
+            print(" ")
+            print("============================================================")
+            print("Publish finished! Here is the decentralized identifier(DID):")
+            print(ALGO_ddo.did)
+            print("============================================================")
+            # algo_did = ALGO_ddo.did
+            # return algo_did
+        else:
+            print(" ")
+            print("===============================================")
+            print("Publish finished! But DDO is not generated yet.")
+
+        ## Advance publish setting
+        # date_created = "2023-09-28T10:55:11Z"
+        # docker_image = "hln940/ocean_dockers"
+        # docker_tag = "latest"
+        # metadata = {
+        #     "created": date_created,
+        #     "updated": date_created,
+        #     "description": "test Algo",
+        #     "name": ALGO_name,
+        #     "type": "algorithm",
+        #     "author": self.my_wallet.address[:7],
+        #     "license": "CC0: PublicDomain",
+        #     "algorithm": {
+        #         "container": { 
+        #             "entrypoint": "python $ALGO", 
+        #             "image": docker_image,
+        #             "tag": docker_tag, 
+        #             "checksum": "sha256:8221d20c1c16491d7d56b9657ea09082c0ee4a8ab1a6621fa720da58b09580e4" 
+        #         }, 
+        #         "consumerParameters": {} 
+        #     } 
+        # }
+        # (ALGO_data_nft, ALGO_datatoken, ALGO_ddo) = ocean.assets.create(
+        #     metadata,
+        #     {"from": self.my_wallet}, 
+        #     datatoken_args=[DatatokenArguments(files=[ALGO_url])],
+        # )
+        # print(f"ALGO_data_nft address = '{ALGO_data_nft.address}'")
+        # print(f"ALGO_datatoken address = '{ALGO_datatoken.address}'")
+        # print(f"ALGO_ddo did = '{ALGO_ddo}'")
+
+        # price = to_wei(10)
+        # ALGO_datatoken.create_exchange({"from": self.my_wallet}, price, ocean.OCEAN_address)
 
 
     # Buy dataset
@@ -262,7 +428,7 @@ class OceanMarket():
         # self.wallet = Wallet(ocean.web3, private_key=self.private_key, transaction_timeout=20, block_confirmations=0)
         # self.my_wallet = Wallet(ocean.web3, private_key='4495afd304f0e4e9a9e0b4a18525a979fa79e2176c518bddcc0ee187adea50bc', transaction_timeout=20, block_confirmations=0)
         assert self.wallet is not None, "Random wallet error, initialize app again"
-        assert self.my_wallet is not None, "Metamask wallet error, please connect Metamask first."
+        # assert self.my_wallet is not None, "Metamask wallet error, please connect Metamask first."
         ### Get asset DDO instance
         ddo = ocean.assets.resolve(did)
         # print (f"Environment Wallet Address == {asset.datatokens[0]['address']}'")
@@ -394,8 +560,8 @@ class OceanMarket():
         asset_dir = ocean.assets.download_asset(ddo, self.wallet, './ocean_download', tx.transactionHash.hex())
         print(asset_dir)
         temp = os.path.join(asset_dir, "file0")
-        file_path = os.rename(temp, f"{asset_dir}" + "/" + f"{ddo.metadata.get('name')}" + ".py")
-        print(f"File downloaded at '{file_path}'")  # e.g. datafile.0xAf07...
+        os.rename(temp, f"{asset_dir}" + "/" + f"{ddo.metadata.get('name')}" + ".py")
+        print(f"File downloaded at {asset_dir}/{ddo.metadata.get('name')}.py")  # e.g. datafile.0xAf07...
         print('Finished !!')
 
 
@@ -522,20 +688,20 @@ class OceanMarket():
         OCEAN.approve(
             data_token.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
 
         OCEAN.approve(
             exchange_dt.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
 
         tx_dt = data_token.buy_DT_and_order(
             provider_fees = provider_fees_c2d['datasets'][0]['providerFee'], 
             exchange = exchange_dt,
-            tx_dict = {"from": self.my_wallet}, 
-            consumer=self.my_wallet.address, 
+            tx_dict = {"from": self.wallet}, 
+            consumer=self.wallet.address, 
             service_index=0
         )
         tx_dt_id = tx_dt.transactionHash.hex()
@@ -548,19 +714,19 @@ class OceanMarket():
         OCEAN.approve(
             algo_token.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
 
         OCEAN.approve(
             exchange_at.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
         tx_at = algo_token.buy_DT_and_order(
             provider_fees = provider_fees_c2d['algorithm']['providerFee'], 
             exchange = exchange_at,
-            tx_dict = {"from": self.my_wallet}, 
-            consumer=self.my_wallet.address, 
+            tx_dict = {"from": self.wallet}, 
+            consumer=self.wallet.address, 
             service_index=0
         )
         tx_at_id = tx_at.transactionHash.hex()
@@ -763,174 +929,6 @@ class OceanMarket():
     #     print(f"Your job started successfully! Started compute job with id: {job_id}")
 
 
-    ### publish dataset asset
-    def dt_publish(self, DT_name=None, cid=None, algo_did=None):
-
-        # IPFS upload flow
-        projectId = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
-        projectSecret = "8456ae0837c28f65138b4dcd5415c193"
-        endpoint = "https://ipfs.infura.io:5001"
-        # IPFS_URI = "https://ipfs.io/ipfs/"
-
-        files = {
-            'file': open('./ipfs_files/brain_and_gpr/' + DT_name, 'rb')
-        }
-
-        # DT_url = 'https://raw.githubusercontent.com/trentmc/branin/main/branin.arff'
-        # DT_name = 'brain.arff'
-
-        ## ADD FILE TO IPFS AND SAVE THE HASH ###
-        response1 = requests.post(endpoint + '/api/v0/add', files=files, auth=(projectId, projectSecret))
-        print(response1)
-        # print(response1.text)
-        cid = response1.text.split(",")[1].split(":")[1].replace('"','')
-        print(f"cid ==> {cid}")
-
-
-        DT_url = f"https://han-lin.infura-ipfs.io/ipfs/{cid}"
-        if not DT_name:
-            now = datetime.now()
-            formatted_datetime = now.strftime('%Y-%m-%d-%H:%M')
-            DT_name = f"Data-{formatted_datetime}"
-
-        exchange_args = ExchangeArguments(
-            rate=to_wei(1), # you can customize this with any price
-            base_token_addr=ocean.OCEAN_address, # you can customize this with any ERC20 token
-            dt_decimals=18
-        )
-
-        print("Publishing data asset on Ocean Market ...")
-        print("=========================================")
-        (DT_data_nft, DT_datatoken, DT_ddo) = ocean.assets.create_url_asset(
-            DT_name, 
-            DT_url, 
-            {"from": self.my_wallet},
-            with_compute=True,
-            wait_for_aqua=True, 
-            pricing_schema_args=exchange_args
-        )
-        print(f"DT_data_nft address = '{DT_data_nft.address}'")
-        print(f"DT_datatoken address = '{DT_datatoken.address}'")
-        if DT_ddo is not None:
-            print(" ")
-            print("========================================================")
-            print("Publish finished! Here is the decentralized identifier(DID):")
-            print(DT_ddo.did)
-            print("========================================================")
-            if algo_did is not None:
-                print(" ")
-                print("Adding trusted algorithm for dataset...")
-                DT_ddo = self.add_trusted_algo(DT_ddo.did, algo_did)
-                print("Algorithm is linked to the dataset! You can start C2D.")
-                # return DT_ddo.did
-        else:
-            print("===============================================")
-            print("Publish finished! But DDO is not generated yet.")
-
-    ### publish algorithm asset
-    def algo_publish(self, file, ALGO_name=None, cid=None, ):
-        
-        # docker_image = "hln940/ocean_dockers"
-        # docker_tag = "latest"
-        # docker_checksum = "sha256:037047cda07d1abc2a24c3d3033283cb1983f38fb8379d19445b8b17162b6a96"
-
-        ## IPFS upload flow
-        if file is not None and file:
-            projectId = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
-            projectSecret = "8456ae0837c28f65138b4dcd5415c193"
-            endpoint = "https://ipfs.infura.io:5001"
-            files = {
-                'file': open('./ipfs_files/brain_and_gpr/' + file, 'rb')
-            }
-
-            ### ADD FILE TO IPFS AND SAVE THE HASH ###
-            print("=====================================")
-            print("Uploading algorithm asset on IPFS ...")
-            print("=====================================")
-            response1 = requests.post(endpoint + '/api/v0/add', files=files, auth=(projectId, projectSecret))
-            print(response1)
-            # print(response1.text)
-            cid = response1.text.split(",")[1].split(":")[1].replace('"','')
-            print(f"cid ==> {cid}")
-            ALGO_url = f"ipfs.io/ipfs/{cid}"
-
-        # ALGO_url = "https://raw.githubusercontent.com/oceanprotocol/c2d-examples/main/branin_and_gpr/gpr.py"
-        if ALGO_name is not None and ALGO_name:
-            now = datetime.now()
-            formatted_datetime = now.strftime('%Y-%m-%d-%H:%M')
-            ALGO_name = f"Algo-{formatted_datetime}"
-
-        exchange_args = ExchangeArguments(
-            rate=to_wei(1), # you can customize this with any price
-            base_token_addr=ocean.OCEAN_address, # you can customize this with any ERC20 token
-            dt_decimals=18
-        )
-
-        print("Publishing algorithm asset on Ocean Market ...")
-        print("==============================================")
-        ## Default publish setting
-        (ALGO_data_nft, ALGO_datatoken, ALGO_ddo) = ocean.assets.create_algo_asset(
-            ALGO_name, 
-            ALGO_url, 
-            {"from": self.my_wallet},
-            # docker_image,
-            # docker_tag,
-            # docker_checksum,
-            with_compute=True,
-            wait_for_aqua=True,
-            pricing_schema_args=exchange_args
-        )
-        print(f"ALGO_data_nft address = '{ALGO_data_nft.address}'")
-        print(f"ALGO_datatoken address = '{ALGO_datatoken.address}'")
-
-        if ALGO_ddo is not None:
-            print(" ")
-            print("============================================================")
-            print("Publish finished! Here is the decentralized identifier(DID):")
-            print(ALGO_ddo.did)
-            print("============================================================")
-            # algo_did = ALGO_ddo.did
-            # return algo_did
-        else:
-            print(" ")
-            print("===============================================")
-            print("Publish finished! But DDO is not generated yet.")
-
-        ## Advance publish setting
-        # date_created = "2023-09-28T10:55:11Z"
-        # docker_image = "hln940/ocean_dockers"
-        # docker_tag = "latest"
-        # metadata = {
-        #     "created": date_created,
-        #     "updated": date_created,
-        #     "description": "test Algo",
-        #     "name": ALGO_name,
-        #     "type": "algorithm",
-        #     "author": self.my_wallet.address[:7],
-        #     "license": "CC0: PublicDomain",
-        #     "algorithm": {
-        #         "container": { 
-        #             "entrypoint": "python $ALGO", 
-        #             "image": docker_image,
-        #             "tag": docker_tag, 
-        #             "checksum": "sha256:8221d20c1c16491d7d56b9657ea09082c0ee4a8ab1a6621fa720da58b09580e4" 
-        #         }, 
-        #         "consumerParameters": {} 
-        #     } 
-        # }
-        # (ALGO_data_nft, ALGO_datatoken, ALGO_ddo) = ocean.assets.create(
-        #     metadata,
-        #     {"from": self.my_wallet}, 
-        #     datatoken_args=[DatatokenArguments(files=[ALGO_url])],
-        # )
-        # print(f"ALGO_data_nft address = '{ALGO_data_nft.address}'")
-        # print(f"ALGO_datatoken address = '{ALGO_datatoken.address}'")
-        # print(f"ALGO_ddo did = '{ALGO_ddo}'")
-
-        # price = to_wei(10)
-        # ALGO_datatoken.create_exchange({"from": self.my_wallet}, price, ocean.OCEAN_address)
-
-
     def add_trusted_algo(self, DT_did, ALGO_did):
         DT_ddo = ocean.assets.resolve(DT_did)
         ALGO_ddo = ocean.assets.resolve(ALGO_did)
@@ -1062,14 +1060,14 @@ class OceanMarket():
         OCEAN.approve(
             exchange_dt.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
 
         exchange_dt.buy_DT(
             datatoken_amt=to_wei(1),
             consume_market_fee_addr=consume_market_fees.address,
             consume_market_fee=consume_market_fees.amount,
-            tx_dict={"from": self.my_wallet},
+            tx_dict={"from": self.wallet},
         )
         print(f"Already bought datatoken ==> {data_token.symbol()}.")
         print(" ")
@@ -1085,14 +1083,14 @@ class OceanMarket():
         OCEAN.approve(
             exchange_at.address,
             to_wei(10),
-            {"from": self.my_wallet},
+            {"from": self.wallet},
         )
 
         exchange_at.buy_DT(
             datatoken_amt=to_wei(1),
             consume_market_fee_addr=consume_market_fees.address,
             consume_market_fee=consume_market_fees.amount,
-            tx_dict={"from": self.my_wallet},
+            tx_dict={"from": self.wallet},
         )
         print(f"Already bought algorithm token ==> {algo_token.symbol()}.")
         print(" ")
@@ -1113,8 +1111,8 @@ class OceanMarket():
         datasets, algorithm = ocean.assets.pay_for_compute_service(
             datasets=[DATA_compute_input],
             algorithm_data=ALGO_compute_input,
-            consume_market_order_fee_address=self.my_wallet.address,
-            tx_dict={"from": self.my_wallet},
+            consume_market_order_fee_address=self.wallet.address,
+            tx_dict={"from": self.wallet},
             compute_environment=computeEnvironment,
             valid_until=duration,
             consumer_address=consumerAddress,
@@ -1129,7 +1127,7 @@ class OceanMarket():
         print("Starting the compute job ...")
         print("============================")
         job_id = ocean.compute.start(
-            consumer_wallet=self.my_wallet,
+            consumer_wallet=self.wallet,
             dataset=datasets[0],
             compute_environment=computeEnvironment,
             algorithm=algorithm,
@@ -1144,7 +1142,7 @@ class OceanMarket():
         succeeded = False
         for i in range(1, 200):
             print(f"--- Checking running status for {i} time ---")
-            status = ocean.compute.status(DATA_ddo, compute_service, job_id, self.my_wallet)
+            status = ocean.compute.status(DATA_ddo, compute_service, job_id, self.wallet)
             if status.get("dateFinished") and Decimal(status["dateFinished"]) > 0:
                 succeeded = True
                 break
@@ -1158,7 +1156,7 @@ class OceanMarket():
         print('Done! C2D successful.')
         print("=====================")
         temp = ocean.compute.compute_job_result_logs(
-            DATA_ddo, compute_service, job_id, self.my_wallet
+            DATA_ddo, compute_service, job_id, self.wallet
         )
         if temp:
             print(" ")
@@ -1184,16 +1182,6 @@ class OceanMarket():
             #   assert len(model) > 0, "unpickle result unsuccessful"
         else:
             print(f"Result is empty, compute job finish unsuccessfully.")
-
-
-    # def test_nft(self):
-    #     model_key = 'model_key'
-    #     model_value = 'model_value'
-    #     data_nft = ocean.get_nft_token('0xaf5E5bC9f1f24dC5c1EF1301e2846A3BdD7Dc92E')
-    #     data_nft.set_data('model_key', 'model_value', {"from": self.my_wallet})
-
-    #     model_value1 = data_nft.get_data('name')
-    #     print(f"Found that {model_key} = {model_value1}")
 
 
     ### Convert Notebook to C2D format Python script 

@@ -111,7 +111,6 @@ function activate(
     execute: (args: any) => {
       // signer account (My metamask wallet address)
       getAccount();
-      alert("Wallet connected!");
     },
   });
 
@@ -215,6 +214,7 @@ async function getAccount() {
   console.log("Account:", await signer.getAddress());
   await signer.getAddress();
   // accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  alert("Wallet connected!");
 }
 
 // function uploadFile() {

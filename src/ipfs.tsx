@@ -67,11 +67,11 @@ class IPFSComponent extends React.Component<{}, IState["call"]> {
 
     xhr.open("POST", "https://ipfs.infura.io:5001/api/v0/add", true);
     // xhr.setRequestHeader("Authorization", `Bearer ${this.state.api}`);
-    // API = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
-    // API_secret = "8456ae0837c28f65138b4dcd5415c193"
+    const API = "2VYq3ClvhVYDIMihM2w1xIbYWgT"
+    const API_secret = "8456ae0837c28f65138b4dcd5415c193"
     xhr.setRequestHeader(
       "Authorization",
-      "Basic " + btoa(`${this.state.api}` + ":" + `${this.state.api_secret}`)
+      "Basic " + btoa(`${API}` + ":" + `${API_secret}`)
     );
 
     xhr.onload = () => {
@@ -95,7 +95,7 @@ class IPFSComponent extends React.Component<{}, IState["call"]> {
     return (
       <React.Fragment>
         <form onSubmit={this.handleSubmit}>
-          <label>
+          {/* <label>
             API Key:
             <input
               type="text"
@@ -111,11 +111,11 @@ class IPFSComponent extends React.Component<{}, IState["call"]> {
               value={this.state.api_secret}
               onChange={this.handleChange2}
             />
-          </label>
-          <br />
+          </label> */}
+          {/* <br />
           <button type="submit" value="Submit">
             Save Key
-          </button>
+          </button> */}
         </form>
         <br></br>
         <label>

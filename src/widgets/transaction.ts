@@ -3,11 +3,11 @@ import * as ethers from "ethers";
 export default async function sendOcean(to_address: string) {
   console.log("Sending OCEAN initiated");
   const send_token_amount = prompt(
-    "Enter OCEAN amount. This is the amount you expect to pay for the dataset.",
+    "Enter OCEAN amount. This is the amount you expect to pay for the asset.",
     "15"
   );
   const send_eth_amount = prompt(
-    "Enter ETH amount. This is the amount you expect to pay in GAS fees from the test wallet. Do not put too much if you are using mainnet!",
+    "Enter MATIC amount. This is the amount you expect to pay for GAS fees from the virtual wallet. Do not put too much if you are using mainnet!",
     "0.2"
   );
   // 旧的contract address已经没了（因为这是对应rinkby的合同地址），所以改成Membai的contract address
